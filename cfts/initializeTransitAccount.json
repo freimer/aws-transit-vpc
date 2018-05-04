@@ -1133,6 +1133,10 @@
             "Description": "Transit VPC ID",
             "Value": { "Ref": "transitVpc" }
         },
+        "TransitAccountNumber": {
+            "Description": "Transit Account Number",
+            "Value": { "Ref": "AWS::AccountId" }
+        },
         "TransitVpcDmzAz1SubnetId": {
             "Description": "DMZ AZ1 Subnet ID",
             "Value": { "Ref": "dmzAz1" }
