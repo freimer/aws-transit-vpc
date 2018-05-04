@@ -81,10 +81,10 @@
    },
    "Mappings": {
         "PAVMAMI": {
-            "us-east-1": {"AMI": "ami-69a2f513"},
-            "us-west-2": {"AMI": "ami-725ef50a"},
-            "us-east-2": {"AMI": "ami-66183303"},
-            "us-west-1": {"AMI": "ami-a29a9bc2"},
+            "us-east-1": {"AMI": "ami-bffd3cc2"},
+            "us-west-2": {"AMI": "ami-9a29b8e2"},
+            "us-east-2": {"AMI": "ami-9ef3c5fb"},
+            "us-west-1": {"AMI": "ami-854551e5"},
             "ca-central-1": {"AMI": "ami-50cb4e34"},
             "eu-west-1": {"AMI": "ami-fc4fdb85"},
             "eu-west-2": {"AMI": "ami-e9dcc48d"},
