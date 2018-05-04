@@ -1141,7 +1141,7 @@
             "Description": "DMZ AZ1 Subnet ID",
             "Value": { "Ref": "dmzAz1" }
         },
-        "TransitVpcDmzAz1SubnetId": {
+        "TransitVpcDmzAz2SubnetId": {
             "Description": "DMZ AZ2 Subnet ID",
             "Value": { "Ref": "dmzAz2" }
         },
