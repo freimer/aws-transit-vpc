@@ -14,6 +14,11 @@
             "Description" : "Palo Alto Cloudformation Template url",
             "Type" : "String"
         },
+        "TemplateKMSKey": {
+            "Description": "KMS Key for Cloudformation Templates",
+            "Type": "String",
+            "Default": "None"
+        },
         "DeLicenseApiKey": {
             "Description" : "PA license deactivation API Key",
             "Type" : "String"
@@ -29,6 +34,11 @@
         "paBootstrapBucketName" : {
             "Description" : "Existing S3 bucket which is having PA-Bootstrap configuration",
             "Type" : "String"
+        },
+        "bootstrapKMS": {
+            "Description": "KMS Key for bootstrap S3 bucket",
+            "Type": "String",
+            "Default": "None"
         },
         "LambdaFunctionsBucketName": {
           "Description": "Existing S3 bucket name which is having the Lambda funtions zip",
@@ -130,6 +140,28 @@
             "sa-east-1": {"AMI": "ami-54e59738"}
         }
     },
+    "Conditions": {
+        "UseBootstrapKMS": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        { "Ref": "bootstrapKMS" },
+                        "None"
+                    ]
+                }
+            ]
+        },
+        "UseTemplateKMS": {
+            "Fn::Not": [
+                {
+                    "Fn::Equals": [
+                        { "Ref": "TemplateKMSKey" },
+                        "None"
+                    ]
+                }
+            ]
+        }
+    },
     "Resources" : {
         "paBootstrapBucketAccessRole": {
             "Type": "AWS::IAM::Role",
@@ -144,16 +176,37 @@
                     "PolicyName": "paBootstrapBucketAccessReadPolicy",
                     "PolicyDocument": {
                       "Version": "2012-10-17",
-                      "Statement": [
-                        {
-                          "Resource": [
-                            { "Fn::Join": [ "", [ "arn:aws:s3:::",{ "Ref" : "paBootstrapBucketName" } ] ] },
-                            { "Fn::Join": [ "", [ "arn:aws:s3:::",{ "Ref" : "paBootstrapBucketName" },"/*" ] ] }
-                          ],
-                          "Action": [ "s3:List*", "s3:Get*" ],
-                          "Effect": "Allow"
+                      "Statement": {
+                            "Fn::If": [
+                                "UseBootstrapKMS",
+                                [
+                                    {
+                                      "Resource": [
+                                        { "Fn::Join": [ "", [ "arn:aws:s3:::",{ "Ref" : "paBootstrapBucketName" } ] ] },
+                                        { "Fn::Join": [ "", [ "arn:aws:s3:::",{ "Ref" : "paBootstrapBucketName" },"/*" ] ] }
+                                      ],
+                                      "Action": [ "s3:List*", "s3:Get*" ],
+                                      "Effect": "Allow"
+                                    },
+                                    {
+                                        "Sid": "S3KMSDecrypt",
+                                        "Effect": "Allow",
+                                        "Action": "kms:Decrypt",
+                                        "Resource": { "Ref": "bootstrapKMS" }
+                                    }
+                                ],
+                                [
+                                    {
+                                      "Resource": [
+                                        { "Fn::Join": [ "", [ "arn:aws:s3:::",{ "Ref" : "paBootstrapBucketName" } ] ] },
+                                        { "Fn::Join": [ "", [ "arn:aws:s3:::",{ "Ref" : "paBootstrapBucketName" },"/*" ] ] }
+                                      ],
+                                      "Action": [ "s3:List*", "s3:Get*" ],
+                                      "Effect": "Allow"
+                                    }
+                                ]
+                            ]
                         }
-                      ]
                     }
                   }
                 ]
@@ -861,74 +914,153 @@
                 "Roles": [{"Ref": "LambdaExecutionRole"}],
                 "PolicyDocument": {
                     "Version": "2012-10-17",
-                    "Statement": [
-                        {
-                            "Sid": "STSAccumRole",
-                            "Effect": "Allow",
-                            "Action": ["sts:AssumeRole"],
-                            "Resource": ["*"]
-                        },
-                        {
-                            "Sid": "InvokeLambda",
-                            "Effect": "Allow",
-                            "Action": ["lambda:Invoke","lambda:InvokeFunction"],
-                            "Resource": ["*"]
-                        },
-                        {
-                            "Action": ["iam:UpdateAssumeRolePolicy","iam:GetRole","iam:PassRole"],
-                            "Resource": ["*" ],
-                            "Effect": "Allow",
-                            "Sid": "IAMActions"
-                        },
-                        {
-                             "Action": ["cloudformation:*"],
-                             "Resource": ["*"],
-                             "Effect": "Allow",
-                             "Sid": "CloudFormationActions"
-                        },
-                        {
-                             "Action": ["ec2:*"],
-                             "Resource": ["*"],
-                             "Effect": "Allow",
-                             "Sid": "EC2FullAccess"
-                        },
-                        {
-                            "Sid": "StateMachineActions",
-                            "Effect": "Allow",
-                            "Action": ["states:ListExecutions","states:StartExecution"],
-                            "Resource": ["*"]
-                        },
-                        {
-                            "Sid": "Logs",
-                            "Effect": "Allow",
-                            "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
-                            "Resource": ["*"]
-                        },
-                        {
-                            "Sid": "S3Actions",
-                            "Effect": "Allow",
-                            "Action": ["s3:GetBucketAcl","s3:GetBucketLocation","s3:GetObject","s3:GetObjectAcl","s3:ListBucket","s3:PutObject","s3:PutObjectAcl","s3:PutObjectTagging", "s3:DeleteBucket", "s3:DeleteBucketPolicy", "s3:DeleteObject"],
-                            "Resource": ["*"]
-                        },
-                        {
-                            "Sid": "DynamoDbActions",
-                            "Effect": "Allow",
-                            "Action": ["dynamodb:CreateTable","dynamodb:DeleteItem","dynamodb:DescribeTable","dynamodb:GetItem","dynamodb:GetRecords","dynamodb:ListTables","dynamodb:PutItem","dynamodb:Query","dynamodb:Scan","dynamodb:TagResource","dynamodb:UpdateItem","dynamodb:UpdateTable"],
-                            "Resource": ["*"]
-                        },
-                        {
-                            "Sid": "SQSActions",
-                            "Effect": "Allow",
-                            "Action": ["sqs:ChangeMessageVisibility","sqs:DeleteMessage","sqs:GetQueueUrl","sqs:ListQueues","sqs:ReceiveMessage","sqs:SendMessage"],
-                            "Resource": ["*"]
-                        },
-                        {
-                            "Sid": "SNSACtions",
-                            "Effect": "Allow",
-                            "Action": ["sns:Publish"],
-                            "Resource": ["*"]
-                        }
-                    ]
+                    "Statement": {
+                      "Fn::If": [
+                        "UseBootstrapKMS",
+                        [
+                          {
+                              "Sid": "STSAccumRole",
+                              "Effect": "Allow",
+                              "Action": ["sts:AssumeRole"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "InvokeLambda",
+                              "Effect": "Allow",
+                              "Action": ["lambda:Invoke","lambda:InvokeFunction"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Action": ["iam:UpdateAssumeRolePolicy","iam:GetRole","iam:PassRole"],
+                              "Resource": ["*" ],
+                              "Effect": "Allow",
+                              "Sid": "IAMActions"
+                          },
+                          {
+                               "Action": ["cloudformation:*"],
+                               "Resource": ["*"],
+                               "Effect": "Allow",
+                               "Sid": "CloudFormationActions"
+                          },
+                          {
+                               "Action": ["ec2:*"],
+                               "Resource": ["*"],
+                               "Effect": "Allow",
+                               "Sid": "EC2FullAccess"
+                          },
+                          {
+                              "Sid": "StateMachineActions",
+                              "Effect": "Allow",
+                              "Action": ["states:ListExecutions","states:StartExecution"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "Logs",
+                              "Effect": "Allow",
+                              "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "S3Actions",
+                              "Effect": "Allow",
+                              "Action": ["s3:GetBucketAcl","s3:GetBucketLocation","s3:GetObject","s3:GetObjectAcl","s3:ListBucket","s3:PutObject","s3:PutObjectAcl","s3:PutObjectTagging", "s3:DeleteBucket", "s3:DeleteBucketPolicy", "s3:DeleteObject"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "S3KMSKey",
+                              "Effect": "Allow",
+                              "Action": "kms:Decrypt",
+                              "Resource": { "Ref": "TemplateKMSKey" }
+                          },
+                          {
+                              "Sid": "DynamoDbActions",
+                              "Effect": "Allow",
+                              "Action": ["dynamodb:CreateTable","dynamodb:DeleteItem","dynamodb:DescribeTable","dynamodb:GetItem","dynamodb:GetRecords","dynamodb:ListTables","dynamodb:PutItem","dynamodb:Query","dynamodb:Scan","dynamodb:TagResource","dynamodb:UpdateItem","dynamodb:UpdateTable"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "SQSActions",
+                              "Effect": "Allow",
+                              "Action": ["sqs:ChangeMessageVisibility","sqs:DeleteMessage","sqs:GetQueueUrl","sqs:ListQueues","sqs:ReceiveMessage","sqs:SendMessage"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "SNSACtions",
+                              "Effect": "Allow",
+                              "Action": ["sns:Publish"],
+                              "Resource": ["*"]
+                          }
+                        ],
+                        [
+                          {
+                              "Sid": "STSAccumRole",
+                              "Effect": "Allow",
+                              "Action": ["sts:AssumeRole"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "InvokeLambda",
+                              "Effect": "Allow",
+                              "Action": ["lambda:Invoke","lambda:InvokeFunction"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Action": ["iam:UpdateAssumeRolePolicy","iam:GetRole","iam:PassRole"],
+                              "Resource": ["*" ],
+                              "Effect": "Allow",
+                              "Sid": "IAMActions"
+                          },
+                          {
+                               "Action": ["cloudformation:*"],
+                               "Resource": ["*"],
+                               "Effect": "Allow",
+                               "Sid": "CloudFormationActions"
+                          },
+                          {
+                               "Action": ["ec2:*"],
+                               "Resource": ["*"],
+                               "Effect": "Allow",
+                               "Sid": "EC2FullAccess"
+                          },
+                          {
+                              "Sid": "StateMachineActions",
+                              "Effect": "Allow",
+                              "Action": ["states:ListExecutions","states:StartExecution"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "Logs",
+                              "Effect": "Allow",
+                              "Action": ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "S3Actions",
+                              "Effect": "Allow",
+                              "Action": ["s3:GetBucketAcl","s3:GetBucketLocation","s3:GetObject","s3:GetObjectAcl","s3:ListBucket","s3:PutObject","s3:PutObjectAcl","s3:PutObjectTagging", "s3:DeleteBucket", "s3:DeleteBucketPolicy", "s3:DeleteObject"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "DynamoDbActions",
+                              "Effect": "Allow",
+                              "Action": ["dynamodb:CreateTable","dynamodb:DeleteItem","dynamodb:DescribeTable","dynamodb:GetItem","dynamodb:GetRecords","dynamodb:ListTables","dynamodb:PutItem","dynamodb:Query","dynamodb:Scan","dynamodb:TagResource","dynamodb:UpdateItem","dynamodb:UpdateTable"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "SQSActions",
+                              "Effect": "Allow",
+                              "Action": ["sqs:ChangeMessageVisibility","sqs:DeleteMessage","sqs:GetQueueUrl","sqs:ListQueues","sqs:ReceiveMessage","sqs:SendMessage"],
+                              "Resource": ["*"]
+                          },
+                          {
+                              "Sid": "SNSACtions",
+                              "Effect": "Allow",
+                              "Action": ["sns:Publish"],
+                              "Resource": ["*"]
+                          }
+                        ]
+                      ]
+                    }
                 }
             }
         },
