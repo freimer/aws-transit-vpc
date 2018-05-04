@@ -99,7 +99,6 @@
                "Statement": [ {
                   "Effect": "Allow",
                   "Principal": {
-                     "AWS": "arn:aws:iam::210278571640:root",
                      "AWS": { "Fn::Join": [":", ["arn:aws:iam:", {"Ref":"TransitAWSAccountNumber"}, "root"]]}
                   },
                   "Action": [ "sts:AssumeRole" ]
@@ -255,7 +254,7 @@
             "Environment": {
                 "Variables":{
                     "subscriberConfigTable":{"Ref":"DynamoDbSubscriberConfig"},
-                    "Region": {"Ref": "AWS::Region"},
+                    "Region": {"Ref": "AWS::Region"}
                 }
             },
             "Runtime": "python3.6",
@@ -278,7 +277,7 @@
                 "subscriberSnsTopicArn":{"Ref":"SNSTopic"},
                 "subscriberConfigTable":{"Ref":"DynamoDbSubscriberConfig"},
                 "transitSnsTopicArn":{"Ref":"TransitSNSTopicArn"},
-                "Region": {"Ref": "AWS::Region"},
+                "Region": {"Ref": "AWS::Region"}
             }
         },
         "Runtime": "python3.6",
