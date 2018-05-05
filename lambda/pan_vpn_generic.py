@@ -523,7 +523,7 @@ def pa_create_named_configuration_backup():
 def createNewPaGroup(region, stackName, templateUrl, paGroupName, sshKey, transitVpcMgmtAz1, transitVpcMgmtAz2,
         transitVpcDmzAz1, transitVpcDmzAz2, transitVpcTrustedSecurityGroup, transitVpcUntrustedSecurityGroup,
         paGroupInstanceProfile, paBootstrapBucketName, Node1Asn, Node2Asn, transitVpcDmzAz1SubnetGateway, 
-        transitVpcDmzAz2SubnetGateway):
+        transitVpcDmzAz2SubnetGateway, transitVpcDmzAz1SubnetCidr, transitVpcDmzAz2SubnetCidr):
     '''Create new PA group by running a Cloudformation template
     '''
     parameters = [
@@ -540,7 +540,10 @@ def createNewPaGroup(region, stackName, templateUrl, paGroupName, sshKey, transi
             { 'ParameterKey' : 'Node1Asn', 'ParameterValue': Node1Asn},
             { 'ParameterKey' : 'Node2Asn', 'ParameterValue': Node2Asn},
             { 'ParameterKey' : 'transitVpcDmzAz1SubnetGateway', 'ParameterValue': transitVpcDmzAz1SubnetGateway},
-            { 'ParameterKey' : 'transitVpcDmzAz2SubnetGateway', 'ParameterValue': transitVpcDmzAz2SubnetGateway}
+            { 'ParameterKey' : 'transitVpcDmzAz2SubnetGateway', 'ParameterValue': transitVpcDmzAz2SubnetGateway},
+            { 'ParameterKey': 'transitVpcDmzAz1SubnetCidr', 'ParameterValue': transitVpcDmzAz1SubnetCidr},
+            { 'ParameterKey': 'transitVpcDmzAz2SubnetCidr', 'ParameterValue': transitVpcDmzAz2SubnetCidr}
+
     ]
     client = boto3.client('cloudformation', region_name=region)
     response = client.create_stack(

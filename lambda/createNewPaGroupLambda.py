@@ -45,7 +45,26 @@ def lambda_handler(event,context):
         paGroupTable = config['TransitPaGroupInfo']
         #Get the ANS number for Node1 and Node2
         result = getPaGroupAndAsns(paGroupTable)
-        response = pan_vpn_generic.createNewPaGroup(region, result['PaGroupName'],config['PaGroupTemplateUrl'],result['PaGroupName'],config['SshKeyName'],config['TransitVpcMgmtAz1SubnetId'],config['TransitVpcMgmtAz2SubnetId'],config['TransitVpcDmzAz1SubnetId'],config['TransitVpcDmzAz2SubnetId'],config['TransitVpcTrustedSecurityGroupId'],config['TransitVpcUntrustedSecurityGroupId'],config['PaGroupInstanceProfileName'],config['PaBootstrapBucketName'], str(result['N1Asn']), str(result['N2Asn']), config['TransitVpcDmzAz1SubnetGateway'], config['TransitVpcDmzAz2SubnetGateway'])
+        response = pan_vpn_generic.createNewPaGroup(region,
+                                                    result['PaGroupName'],
+                                                    config['PaGroupTemplateUrl'],
+                                                    result['PaGroupName'],
+                                                    config['SshKeyName'],
+                                                    config['TransitVpcMgmtAz1SubnetId'],
+                                                    config['TransitVpcMgmtAz2SubnetId'],
+                                                    config['TransitVpcDmzAz1SubnetId'],
+                                                    config['TransitVpcDmzAz2SubnetId'],
+                                                    config['TransitVpcTrustedSecurityGroupId'],
+                                                    config['TransitVpcUntrustedSecurityGroupId'],
+                                                    config['PaGroupInstanceProfileName'],
+                                                    config['PaBootstrapBucketName'],
+                                                    str(result['N1Asn']),
+                                                    str(result['N2Asn']),
+                                                    config['TransitVpcDmzAz1SubnetGateway'],
+                                                    config['TransitVpcDmzAz2SubnetGateway'],
+                                                    config['TransitVpcDmzAz1SubnetCidr'],
+                                                    config['TransitVpcDmzAz2SubnetCidr']
+                                                    )
         response['Region']=region
         response['StackName']=result['PaGroupName']
         logger.info("Sending Data {} to checkStackStaus() function".format(response))

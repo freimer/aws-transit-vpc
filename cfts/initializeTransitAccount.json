@@ -224,6 +224,8 @@
             "DependsOn": ["transitVpc", "mgmtAz1", "mgmtAz1", "TransitStateMachine","TransitAssumeRole", "DynamoDbBgpTunnelIpPool", "DynamoDbVpcTable", "paGroupInstanceProfile", "SQSNormalFifoQueue", "VpnConfigBucket","SQSPriorityFifoQueue", "SNSTopic", "DynamoDbTransitConfig", "DynamoDbVgwAsn", "DynamoDbPaGroupInfo", "paBootstrapBucketAccessRole", "dmzAz2", "dmzAz1", "mgmtAz1", "mgmtAz2", "trustedSecurityGroup", "untrustedSecurityGroup"],
             "Properties": {
                 "ServiceToken": { "Fn::GetAtt" : ["TransitInitializeLambda", "Arn"] },
+                "TransitVpcDmzAz1SubnetCidr": {"Ref": "dmzAz1Cidr"},
+                "TransitVpcDmzAz2SubnetCidr": {"Ref": "dmzAz2Cidr"},
                 "TransitVpcDmzAz1SubnetGateway": {"Ref": "dmzAz1Cidr"},
                 "TransitVpcDmzAz2SubnetGateway": {"Ref":"dmzAz2Cidr"},
                 "SubscriberAccounts": {"Ref": "SubscriberAWSAccountNumber"},
